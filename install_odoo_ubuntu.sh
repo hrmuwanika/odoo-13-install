@@ -84,9 +84,9 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 # Install Python Dependencies
 #--------------------------------------------------
 echo -e "\n=================== Installing Python Dependencies ============================"
-sudo apt install -y git python3 python3-dev python3-pip build-essential wget python3-venv python3-wheel python3-cffi libxslt-dev  \
-libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libjpeg-dev gdebi libatlas-base-dev libblas-dev liblcms2-dev \
-zlib1g-dev libjpeg8-dev libxrender1 libmysqlclient-dev
+sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
+libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools \
+node-less python3-venv python3-cffi  libjpeg-dev gdebi zlib1g-dev 
 
 # install libssl
 sudo apt -y install libssl-dev
