@@ -86,19 +86,10 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 echo -e "\n=================== Installing Python Dependencies ============================"
 sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
 libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools \
-node-less python3-venv python3-cffi  libjpeg-dev gdebi zlib1g-dev 
-
-# install libssl
-sudo apt -y install libssl-dev
-
-#--------------------------------------------------
-# Install Python pip Dependencies
-#--------------------------------------------------
-echo -e "\n=================== Installing Python pip Dependencies ============================"
-sudo apt install -y libpq-dev libxml2-dev libxslt1-dev libffi-dev
+node-less python3-venv python3-cffi libjpeg-dev gdebi zlib1g-dev curl 
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
-sudo apt install -y xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
+sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
 
 echo -e "\n================== Install python packages/requirements ============================"
 sudo pip3 install --upgrade pip
@@ -106,8 +97,10 @@ sudo pip3 install setuptools wheel
 
 
 echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
-sudo curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs npm -y
+sudo curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
+sudo bash nodesource_setup.sh
+sudo apt -y remove nodejs npm
+sudo apt -y install nodejs npm
 sudo npm install -g --upgrade npm
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 sudo npm install -g less less-plugin-clean-css
