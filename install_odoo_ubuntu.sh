@@ -52,6 +52,7 @@ ADMIN_EMAIL="odoo@example.com"
 #----------------------------------------------------
 # Disable password authentication
 #----------------------------------------------------
+sudo apt -y install openssh-server
 sudo sed -i 's/#ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
 sudo sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config 
 sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
@@ -85,7 +86,7 @@ if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
     sudo apt -y install postgresql-14
 else
     echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
-    sudo apt-get install postgresql postgresql-server-dev-all -y
+    sudo apt -y install postgresql postgresql-server-dev-all
 fi
 
 sudo systemctl start postgresql && sudo systemctl enable postgresql
@@ -104,10 +105,6 @@ node-less python3-venv python3-cffi gdebi zlib1g-dev curl libxslt-dev
 echo -e "\n================== Install Wkhtmltopdf ============================================="
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
 
-echo -e "\n================== Install python packages/requirements ============================"
-sudo pip3 install --upgrade pip
-sudo pip3 install setuptools wheel
-
 echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
 #sudo curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
 #sudo bash nodesource_setup.sh
@@ -122,12 +119,12 @@ sudo npm install -g rtlcss
 # Install Wkhtmltopdf if needed
 #--------------------------------------------------
 if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
-echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODOO 16 ----"
+echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODOO 18 ----"
 ###  WKHTMLTOPDF download links
 ## === Ubuntu Jammy x64 === (for other distributions please replace this link,
 ## in order to have correct version of wkhtmltopdf installed, for a danger note refer to
 ## https://github.com/odoo/odoo/wiki/Wkhtmltopdf ):
-## https://www.odoo.com/documentation/16.0/setup/install.html#debian-ubuntu
+## https://www.odoo.com/documentation/18.0/setup/install.html#debian-ubuntu
 
   sudo wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb 
   sudo dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
