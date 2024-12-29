@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ################################################################################
-# Script for installing Odoo on Ubuntu 22.04 LTS (could be used for other version too)
+# Script for installing Odoo on Ubuntu 16.04, 18.04, 20.04 and 22.04 (could be used for other version too)
 # Author: Henry Robert Muwanika
 #-------------------------------------------------------------------------------
-# This script will install Odoo on your Ubuntu 22.04 server. It can install multiple Odoo instances
+# This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
 # in one Ubuntu because of the different xmlrpc_ports
 #-------------------------------------------------------------------------------
 # crontab -e
@@ -30,6 +30,8 @@ OE_PORT="8069"
 OE_VERSION="18.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
+# Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
+INSTALL_POSTGRESQL_FOURTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -74,7 +76,18 @@ timedatectl
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
-sudo apt install -y postgresql
+echo -e "\n---- Install PostgreSQL Server ----"
+if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
+    echo -e "\n---- Installing postgreSQL V14 due to the user it's choice ----"
+    sudo curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc|sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/postgresql.gpg
+    sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+    sudo apt update
+    sudo apt -y install postgresql-14
+else
+    echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
+    sudo apt-get install postgresql postgresql-server-dev-all -y
+fi
+
 sudo systemctl start postgresql && sudo systemctl enable postgresql
 
 echo -e "\n=============== Creating the ODOO PostgreSQL User ========================="
@@ -86,7 +99,7 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 echo -e "\n=================== Installing Python Dependencies ============================"
 sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
 libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools \
-node-less python3-venv python3-cffi libjpeg-dev gdebi zlib1g-dev curl 
+node-less python3-venv python3-cffi gdebi zlib1g-dev curl libxslt-dev
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
@@ -95,16 +108,15 @@ echo -e "\n================== Install python packages/requirements =============
 sudo pip3 install --upgrade pip
 sudo pip3 install setuptools wheel
 
-
 echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
-sudo curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
-sudo bash nodesource_setup.sh
-sudo apt -y remove nodejs npm
+#sudo curl -sL https://deb.nodesource.com/setup_20.x -o nodesource_setup.sh
+#sudo bash nodesource_setup.sh
+#sudo apt -y remove nodejs npm
+
 sudo apt -y install nodejs npm
-sudo npm install -g --upgrade npm
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 sudo npm install -g less less-plugin-clean-css
-sudo npm install -g rtlcss node-gyp
+sudo npm install -g rtlcss
 
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
