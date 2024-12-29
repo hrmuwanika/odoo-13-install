@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ################################################################################
-# Script for installing Odoo on Ubuntu 22.04 LTS (could be used for other version too)
+# Script for installing Odoo on Ubuntu 16.04, 18.04, 20.04 and 22.04 (could be used for other version too)
 # Author: Henry Robert Muwanika
 #-------------------------------------------------------------------------------
-# This script will install Odoo on your Ubuntu 22.04 server. It can install multiple Odoo instances
+# This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
 # in one Ubuntu because of the different xmlrpc_ports
 #-------------------------------------------------------------------------------
 # crontab -e
@@ -25,11 +25,13 @@ OE_HOME_EXT="/opt/$OE_USER/${OE_USER}-server"
 INSTALL_WKHTMLTOPDF="True"
 # Set the default Odoo port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 OE_PORT="8069"
-# Choose the Odoo version which you want to install. For example: 16.0, 15.0 or 14.0. When using 'master' the master version will be installed.
+# Choose the Odoo version which you want to install. For example: 17.0, 16.0, 15.0 or 14.0. When using 'master' the master version will be installed.
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 14.0
-OE_VERSION="16.0"
+OE_VERSION="17.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
+# Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
+INSTALL_POSTGRESQL_FOURTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -50,6 +52,7 @@ ADMIN_EMAIL="odoo@example.com"
 #----------------------------------------------------
 # Disable password authentication
 #----------------------------------------------------
+sudo apt -y install openssh-server
 sudo sed -i 's/#ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
 sudo sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config 
 sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
@@ -74,7 +77,15 @@ timedatectl
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
-sudo apt install -y postgresql
+echo -e "\n---- Install PostgreSQL Server ----"
+if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
+    echo -e "\n---- Installing postgreSQL V14 due to the user it's choice ----"
+    sudo apt -y install postgresql-14
+else
+    echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
+    sudo apt -y install postgresql postgresql-server-dev-all
+fi
+
 sudo systemctl start postgresql && sudo systemctl enable postgresql
 
 echo -e "\n=============== Creating the ODOO PostgreSQL User ========================="
@@ -84,50 +95,34 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 # Install Python Dependencies
 #--------------------------------------------------
 echo -e "\n=================== Installing Python Dependencies ============================"
-sudo apt install -y git python3 python3-dev python3-pip build-essential wget python3-venv python3-wheel python3-cffi libxslt-dev  \
-libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libjpeg-dev gdebi libatlas-base-dev libblas-dev liblcms2-dev \
-zlib1g-dev libjpeg8-dev libxrender1
-
-# install libssl
-sudo apt -y install libssl-dev
-
-#--------------------------------------------------
-# Install Python pip Dependencies
-#--------------------------------------------------
-echo -e "\n=================== Installing Python pip Dependencies ============================"
-sudo apt install -y libpq-dev libxml2-dev libxslt1-dev libffi-dev
+sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
+libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools node-less \
+python3-venv python3-cffi gdebi zlib1g-dev curl
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
-sudo apt install -y xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
-
-echo -e "\n================== Install python packages/requirements ============================"
-sudo pip3 install --upgrade pip
-sudo pip3 install setuptools wheel
-
+sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
 
 echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
-sudo curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs npm -y
-sudo npm install -g --upgrade npm
+sudo apt -y install nodejs npm
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 sudo npm install -g less less-plugin-clean-css
-sudo npm install -g rtlcss node-gyp
+sudo npm install -g rtlcss
 
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
 #--------------------------------------------------
 if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
-echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODOO 16 ----"
+echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODOO 18 ----"
 ###  WKHTMLTOPDF download links
 ## === Ubuntu Jammy x64 === (for other distributions please replace this link,
 ## in order to have correct version of wkhtmltopdf installed, for a danger note refer to
 ## https://github.com/odoo/odoo/wiki/Wkhtmltopdf ):
-## https://www.odoo.com/documentation/16.0/setup/install.html#debian-ubuntu
+## https://www.odoo.com/documentation/18.0/setup/install.html#debian-ubuntu
 
   sudo wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb 
-  sudo dpkg -i wkhtmltox_0.12.6.1-2.jammy_amd64.deb
-  sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
-  sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
+  sudo apt install ./wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+  sudo cp /usr/local/bin/wkhtmltoimage /usr/bin/wkhtmltoimage
+  sudo cp /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
    else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
   fi
@@ -170,6 +165,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     echo -e "\n========= Added Enterprise code under $OE_HOME/enterprise/addons ========="
     echo -e "\n============= Installing Enterprise specific libraries ============"
     sudo -H pip3 install num2words ofxparse dbfread ebaysdk firebase_admin pyOpenSSL
+    sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 fi
 
@@ -325,13 +321,6 @@ server {
   # common gzip
   gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
   gzip on;
-
-
-  client_body_in_file_only clean;
-  client_body_buffer_size 32K;
-  sendfile on;
-  send_timeout 600s;
-  keepalive_timeout 300;
 }
  
 EOF
