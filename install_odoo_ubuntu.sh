@@ -99,6 +99,10 @@ sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxm
 libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools node-less \
 python3-venv python3-cffi gdebi zlib1g-dev curl
 
+pip3 install --upgrade pip
+pip3 install gevent
+pip3 install python-ldap
+
 echo -e "\n================== Install Wkhtmltopdf ============================================="
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
 
