@@ -149,7 +149,7 @@ sudo chown -R $OE_USER:$OE_USER /var/log/$OE_USER
 #--------------------------------------------------
 echo -e "\n========== Installing ODOO Server ==============="
 sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $OE_HOME_EXT/
-sudo pip3 install -r /$OE_HOME_EXT/requirements.txt
+sudo pip3 install -r /$OE_HOME_EXT/requirements.txt --break-system-packages
 if [ $IS_ENTERPRISE = "True" ]; then
     # Odoo Enterprise install!
     sudo pip3 install psycopg2-binary pdfminer.six
