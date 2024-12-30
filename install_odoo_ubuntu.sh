@@ -31,7 +31,7 @@ OE_VERSION="18.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
 # Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
-INSTALL_POSTGRESQL_FOURTEEN="True"
+INSTALL_POSTGRESQL_SIXTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -82,9 +82,9 @@ timedatectl
 # Install PostgreSQL Server
 #--------------------------------------------------
 echo -e "\n---- Install PostgreSQL Server ----"
-if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
-    echo -e "\n---- Installing postgreSQL V14 due to the user it's choice ----"
-    sudo apt -y install postgresql-14
+if [ $INSTALL_POSTGRESQL_SIXTEEN = "True" ]; then
+    echo -e "\n---- Installing postgreSQL V16 due to the user it's choice ----"
+    sudo apt -y install postgresql-16
 else
     echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
     sudo apt -y install postgresql postgresql-server-dev-all
