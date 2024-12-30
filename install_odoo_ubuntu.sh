@@ -68,7 +68,7 @@ sudo apt upgrade -y
 sudo apt autoremove -y
 
 sudo apt -y install software-properties-common
-sudo add-apt-repository ppa:deadsnakes/ppa
+sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt update
 
 #--------------------------------------------------
