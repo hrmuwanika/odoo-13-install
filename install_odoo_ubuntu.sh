@@ -29,7 +29,7 @@ OE_PORT="8069"
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 14.0
 OE_VERSION="15.0"
 # Set this to True if you want to install the Odoo enterprise version!
-IS_ENTERPRISE="True"
+IS_ENTERPRISE="False"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -62,10 +62,10 @@ ADMIN_EMAIL="odoo@example.com"
 echo -e "\n============== Update Server ======================="
 # universe package is for Ubuntu 20.x
 sudo apt install -y software-properties-common
-sudo add-apt-repository universe
+sudo add-apt-repository universe -y
 
 # libpng12-0 dependency for wkhtmltopdf
-sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ focal main"
+sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ focal main" -y
 
 sudo apt update 
 sudo apt upgrade -y
@@ -82,9 +82,6 @@ timedatectl
 # Install PostgreSQL Server
 #--------------------------------------------------
 echo -e "\n================ Install PostgreSQL Server =========================="
-echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee  /etc/apt/sources.list.d/pgdg.list
-wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-sudo apt update
 sudo apt install -y postgresql
 sudo systemctl start postgresql && sudo systemctl enable postgresql
 
@@ -110,7 +107,7 @@ sudo apt install -y xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontc
 sudo apt install -y libfreetype6-dev zlib1g-dev libblas-dev libatlas-base-dev libtiff5-dev libjpeg8-dev \
 libopenjp2-7-dev liblcms2-dev liblcms2-utils libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev
 
-sudo add-apt-repository ppa:linuxuprising/libpng12
+sudo add-apt-repository ppa:linuxuprising/libpng12 -y
 sudo apt update
 sudo apt install -y libpng12-0
 
@@ -121,12 +118,11 @@ sudo pip3 install setuptools wheel
 sudo pip3 install -r requirements.txt
 
 echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
-sudo curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-sudo apt install -y nodejs -y
+sudo apt install -y nodejs npm
 sudo npm install -g --upgrade npm
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 sudo npm install -g less-plugin-clean-css
-sudo npm install -g rtlcss node-gyp
+sudo npm install -g rtlcss 
 
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
