@@ -104,7 +104,7 @@ libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev libl
 python3-venv python3-cffi gdebi zlib1g-dev curl cython3
 
 sudo pip3 install --upgrade pip
-sudo pip3 install setuptools wheel gevent greenlet python-ldap
+sudo pip3 install setuptools wheel
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
