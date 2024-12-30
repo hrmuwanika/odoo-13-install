@@ -1,10 +1,10 @@
 #!/bin/bash
 
 ################################################################################
-# Script for installing Odoo on Ubuntu 20.04 LTS (could be used for other version too)
+# Script for installing Odoo on Ubuntu 20.04 and 22.04 (could be used for other version too)
 # Author: Henry Robert Muwanika
 #-------------------------------------------------------------------------------
-# This script will install Odoo on your Ubuntu 20.04 server. It can install multiple Odoo instances
+# This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
 # in one Ubuntu because of the different xmlrpc_ports
 #-------------------------------------------------------------------------------
 # crontab -e
@@ -25,11 +25,13 @@ OE_HOME_EXT="/opt/$OE_USER/${OE_USER}-server"
 INSTALL_WKHTMLTOPDF="True"
 # Set the default Odoo port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 OE_PORT="8069"
-# Choose the Odoo version which you want to install. For example: 14.0, 13.0 or 12.0. When using 'master' the master version will be installed.
+# Choose the Odoo version which you want to install. For example: 16.0, 15.0 or 14.0. When using 'master' the master version will be installed.
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 14.0
-OE_VERSION="15.0"
+OE_VERSION="14.0"
 # Set this to True if you want to install the Odoo enterprise version!
 IS_ENTERPRISE="False"
+# Installs postgreSQL V14 instead of defaults (e.g V12 for Ubuntu 20/22) - this improves performance
+INSTALL_POSTGRESQL_FOURTEEN="True"
 # Set this to True if you want to install Nginx!
 INSTALL_NGINX="True"
 # Set the superadmin password - if GENERATE_RANDOM_PASSWORD is set to "True" we will automatically generate a random password, otherwise we use this one
@@ -48,28 +50,26 @@ ADMIN_EMAIL="odoo@example.com"
 
 ###
 #----------------------------------------------------
-# Uncomment if you want to disable password authentication
+# Disable password authentication
 #----------------------------------------------------
-# sudo sed -i 's/#ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
-# sudo sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config 
-# sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
-# sudo systemctl restart sshd
+sudo apt -y install openssh-server
+sudo sed -i 's/#ChallengeResponseAuthentication yes/ChallengeResponseAuthentication no/' /etc/ssh/sshd_config
+sudo sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config 
+sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart sshd
 
 ##
 #--------------------------------------------------
 # Update Server
 #--------------------------------------------------
 echo -e "\n============== Update Server ======================="
-# universe package is for Ubuntu 20.x
-sudo apt install -y software-properties-common
-sudo add-apt-repository universe -y
-
-# libpng12-0 dependency for wkhtmltopdf
-sudo add-apt-repository "deb http://mirrors.kernel.org/ubuntu/ focal main" -y
-
 sudo apt update 
 sudo apt upgrade -y
 sudo apt autoremove -y
+
+sudo apt -y install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
 
 #--------------------------------------------------
 # Set up the timezones
@@ -81,8 +81,15 @@ timedatectl
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
-echo -e "\n================ Install PostgreSQL Server =========================="
-sudo apt install -y postgresql
+echo -e "\n---- Install PostgreSQL Server ----"
+if [ $INSTALL_POSTGRESQL_FOURTEEN = "True" ]; then
+    echo -e "\n---- Installing postgreSQL V14 due to the user it's choice ----"
+    sudo apt -y install postgresql-14
+else
+    echo -e "\n---- Installing the default postgreSQL version based on Linux version ----"
+    sudo apt -y install postgresql postgresql-server-dev-all
+fi
+
 sudo systemctl start postgresql && sudo systemctl enable postgresql
 
 echo -e "\n=============== Creating the ODOO PostgreSQL User ========================="
@@ -92,53 +99,37 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 # Install Python Dependencies
 #--------------------------------------------------
 echo -e "\n=================== Installing Python Dependencies ============================"
-sudo apt install -y git python3-dev python3-pip build-essential wget python3-venv python3-wheel python3-cffi libxslt-dev \
-libzip-dev libldap2-dev libsasl2-dev python3-setuptools node-less libjpeg-dev gdebi libssl-dev
+sudo apt install -y git wget python3.10 python3.10-dev python3.10-pip python3.10-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
+libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3.10-setuptools node-less \
+python3.10-venv python3.10-cffi gdebi zlib1g-dev curl cython3
 
-#--------------------------------------------------
-# Install Python pip Dependencies
-#--------------------------------------------------
-echo -e "\n=================== Installing Python pip Dependencies ============================"
-sudo apt install -y libpq-dev libxml2-dev libxslt1-dev libffi-dev
+sudo pip3 install --upgrade pip
+sudo pip3 install setuptools wheel gevent greenlet python-ldap
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
-sudo apt install -y xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
-
-sudo apt install -y libfreetype6-dev zlib1g-dev libblas-dev libatlas-base-dev libtiff5-dev libjpeg8-dev \
-libopenjp2-7-dev liblcms2-dev liblcms2-utils libwebp-dev libharfbuzz-dev libfribidi-dev libxcb1-dev
-
-sudo add-apt-repository ppa:linuxuprising/libpng12 -y
-sudo apt update
-sudo apt install -y libpng12-0
-
-echo -e "\n================== Install python packages/requirements ============================"
-wget https://raw.githubusercontent.com/odoo/odoo/${OE_VERSION}/requirements.txt
-sudo pip3 install --upgrade pip
-sudo pip3 install setuptools wheel
-sudo pip3 install -r requirements.txt
+sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
 
 echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
-sudo apt install -y nodejs npm
-sudo npm install -g --upgrade npm
+sudo apt -y install nodejs npm
 sudo ln -s /usr/bin/nodejs /usr/bin/node
-sudo npm install -g less-plugin-clean-css
-sudo npm install -g rtlcss 
+sudo npm install -g less less-plugin-clean-css
+sudo npm install -g rtlcss
 
 #--------------------------------------------------
 # Install Wkhtmltopdf if needed
 #--------------------------------------------------
 if [ $INSTALL_WKHTMLTOPDF = "True" ]; then
-echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODOO 15 ----"
+echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODOO 18 ----"
 ###  WKHTMLTOPDF download links
-## === Ubuntu Focal x64 === (for other distributions please replace this link,
+## === Ubuntu Jammy x64 === (for other distributions please replace this link,
 ## in order to have correct version of wkhtmltopdf installed, for a danger note refer to
 ## https://github.com/odoo/odoo/wiki/Wkhtmltopdf ):
-## https://www.odoo.com/documentation/15.0/setup/install.html#debian-ubuntu
+## https://www.odoo.com/documentation/18.0/setup/install.html#debian-ubuntu
 
-  sudo wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.focal_amd64.deb
-  sudo dpkg -i wkhtmltox_0.12.6-1.focal_amd64.deb
-  sudo ln -s /usr/local/bin/wkhtmltopdf /usr/bin
-  sudo ln -s /usr/local/bin/wkhtmltoimage /usr/bin
+  sudo wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb 
+  sudo apt install ./wkhtmltox_0.12.6.1-2.jammy_amd64.deb
+  sudo cp /usr/local/bin/wkhtmltoimage /usr/bin/wkhtmltoimage
+  sudo cp /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
    else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
   fi
@@ -158,7 +149,7 @@ sudo chown -R $OE_USER:$OE_USER /var/log/$OE_USER
 #--------------------------------------------------
 echo -e "\n========== Installing ODOO Server ==============="
 sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $OE_HOME_EXT/
-
+sudo pip3 install -r /$OE_HOME_EXT/requirements.txt
 if [ $IS_ENTERPRISE = "True" ]; then
     # Odoo Enterprise install!
     sudo pip3 install psycopg2-binary pdfminer.six
@@ -181,6 +172,7 @@ if [ $IS_ENTERPRISE = "True" ]; then
     echo -e "\n========= Added Enterprise code under $OE_HOME/enterprise/addons ========="
     echo -e "\n============= Installing Enterprise specific libraries ============"
     sudo -H pip3 install num2words ofxparse dbfread ebaysdk firebase_admin pyOpenSSL
+    sudo npm install -g less
     sudo npm install -g less-plugin-clean-css
 fi
 
@@ -217,7 +209,6 @@ fi
 # echo -e "\n======== Adding Enterprise or custom modules ============="
 if [ $IS_ENTERPRISE = "True" ]; then
   #### upgrade odoo community to enterprise edition ####
-  # Odoo 14: https://www.soladrive.com/downloads/enterprise-14.0.tar.gz
   # Odoo 15: https://www.soladrive.com/downloads/enterprise-15.0.tar.gz
   
   echo -e "\n======== Adding some enterprise modules ============="
@@ -259,7 +250,7 @@ sudo chown root: /lib/systemd/system/$OE_USER.service
 
 echo -e "\n======== Odoo startup File ============="
 sudo systemctl daemon-reload
-sudo systemctl enable $OE_USER.service
+sudo systemctl enable --now $OE_USER.service
 sudo systemctl start $OE_USER.service
 
 sudo systemctl restart $OE_USER.service
@@ -276,21 +267,21 @@ if [ $INSTALL_NGINX = "True" ]; then
 cat <<EOF > /etc/nginx/sites-available/$OE_USER
 
 # odoo server
-upstream $OE_USER {
+ upstream $OE_USER {
  server 127.0.0.1:$OE_PORT;
 }
 
-upstream ${OE_USER}chat {
+ upstream ${OE_USER}chat {
  server 127.0.0.1:$LONGPOLLING_PORT;
 }
 
 server {
-    listen 80;
-    server_name $WEBSITE_NAME;
+   listen 80;
+   server_name $WEBSITE_NAME;
 
    # Specifies the maximum accepted body size of a client request,
    # as indicated by the request header Content-Length.
-   client_max_body_size 0;
+   client_max_body_size 500M;
 
    # log
    access_log /var/log/nginx/$OE_USER-access.log;
@@ -335,8 +326,8 @@ server {
   }
 
   # common gzip
-    gzip_types text/css text/scss text/plain text/xml application/xml application/json application/javascript;
-    gzip on;
+  gzip_types text/css text/less text/plain text/xml application/xml application/json application/javascript;
+  gzip on;
 }
  
 EOF
@@ -356,13 +347,13 @@ fi
 #--------------------------------------------------
 # Enable ssl with certbot
 #--------------------------------------------------
-if [ $INSTALL_NGINX = "True" ] && [ $ENABLE_SSL = "True" ] && [ $ADMIN_EMAIL != "odoo@example.com" ]  && [ $WEBSITE_NAME != "example.com" ];then
+if [ $INSTALL_NGINX = "True" ] && [ $ENABLE_SSL = "True" ]  && [ $WEBSITE_NAME != "example.com" ];then
   sudo apt-get remove certbot
   sudo snap install core
   sudo snap refresh core
   sudo snap install --classic certbot
   sudo ln -s /snap/bin/certbot /usr/bin/certbot
-  sudo certbot --nginx -d $WEBSITE_NAME --noninteractive --agree-tos --email $ADMIN_EMAIL --redirect
+  sudo certbot --nginx -d $WEBSITE_NAME 
   sudo systemctl reload nginx  
   echo "\n============ SSL/HTTPS is enabled! ========================"
 else
