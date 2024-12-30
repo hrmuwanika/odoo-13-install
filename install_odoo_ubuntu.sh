@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Script for installing Odoo on Ubuntu 16.04, 18.04, 20.04 and 22.04 (could be used for other version too)
+# Script for installing Odoo on Ubuntu 20.04 and 22.04 (could be used for other version too)
 # Author: Henry Robert Muwanika
 #-------------------------------------------------------------------------------
 # This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
@@ -25,7 +25,7 @@ OE_HOME_EXT="/opt/$OE_USER/${OE_USER}-server"
 INSTALL_WKHTMLTOPDF="True"
 # Set the default Odoo port (you still have to use -c /etc/odoo-server.conf for example to use this.)
 OE_PORT="8069"
-# Choose the Odoo version which you want to install. For example: 17.0, 16.0, 15.0 or 14.0. When using 'master' the master version will be installed.
+# Choose the Odoo version which you want to install. For example: 16.0, 15.0 or 14.0. When using 'master' the master version will be installed.
 # IMPORTANT! This script contains extra libraries that are specifically needed for Odoo 14.0
 OE_VERSION="17.0"
 # Set this to True if you want to install the Odoo enterprise version!
@@ -67,6 +67,10 @@ sudo apt update
 sudo apt upgrade -y
 sudo apt autoremove -y
 
+sudo apt -y install software-properties-common
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+
 #--------------------------------------------------
 # Set up the timezones
 #--------------------------------------------------
@@ -95,13 +99,12 @@ sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 # Install Python Dependencies
 #--------------------------------------------------
 echo -e "\n=================== Installing Python Dependencies ============================"
-sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
-libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools node-less \
-python3-venv python3-cffi gdebi zlib1g-dev curl
+sudo apt install -y git wget python3.10 python3.10-dev python3.10-pip python3.10-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
+libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3.10-setuptools node-less \
+python3.10-venv python3.10-cffi gdebi zlib1g-dev curl cython3
 
-pip3 install --upgrade pip
-pip3 install gevent
-pip3 install python-ldap
+sudo pip3 install --upgrade pip
+sudo pip3 install setuptools wheel gevent greenlet python-ldap
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
