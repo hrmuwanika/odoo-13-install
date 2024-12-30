@@ -103,8 +103,8 @@ sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxm
 libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools node-less \
 python3-venv python3-cffi gdebi zlib1g-dev curl cython3
 
-sudo pip3 install --upgrade pip
-sudo pip3 install setuptools wheel
+sudo pip3 install --upgrade pip --break-system-packages
+sudo pip3 install setuptools wheel --break-system-packages
 
 echo -e "\n================== Install Wkhtmltopdf ============================================="
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
