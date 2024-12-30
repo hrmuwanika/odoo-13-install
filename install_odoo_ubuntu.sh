@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Script for installing Odoo on Ubuntu 16.04, 18.04, 20.04 and 22.04 (could be used for other version too)
+# Script for installing Odoo on Ubuntu 20.04 and 22.04 (could be used for other version too)
 # Author: Henry Robert Muwanika
 #-------------------------------------------------------------------------------
 # This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
