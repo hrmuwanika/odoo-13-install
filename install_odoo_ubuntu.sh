@@ -155,8 +155,8 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo pip3 install psycopg2-binary pdfminer.six
     echo -e "\n============ Create symlink for node ==============="
     sudo ln -s /usr/bin/nodejs /usr/bin/node
-    sudo su $OE_USER -c "mkdir $OE_HOME/enterprise"
-    sudo su $OE_USER -c "mkdir $OE_HOME/enterprise/addons"
+    sudo mkdir $OE_HOME/enterprise
+    sudo mkdir $OE_HOME/enterprise/addons
 
     GITHUB_RESPONSE=$(sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/enterprise "$OE_HOME/enterprise/addons" 2>&1)
     while [[ $GITHUB_RESPONSE == *"Authentication"* ]]; do
@@ -177,8 +177,8 @@ if [ $IS_ENTERPRISE = "True" ]; then
 fi
 
 echo -e "\n========= Create custom module directory ============"
-sudo su $OE_USER -c "mkdir $OE_HOME/custom"
-sudo su $OE_USER -c "mkdir $OE_HOME/custom/addons"
+sudo mkdir $OE_HOME/custom
+sudo mkdir $OE_HOME/custom/addons
 
 echo -e "\n======= Setting permissions on home folder =========="
 sudo chown -R $OE_USER:$OE_USER $OE_HOME/
