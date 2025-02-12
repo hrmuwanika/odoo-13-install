@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ################################################################################
-# Script for installing Odoo on Ubuntu 24.04 (could be used for other version too)
+# Odoo 18 Installation Script for Ubuntu 24.04 (could be used for other version too)
 # Author: Henry Robert Muwanika
 #-------------------------------------------------------------------------------
 # This script will install Odoo on your Ubuntu server. It can install multiple Odoo instances
@@ -60,9 +60,9 @@ sudo systemctl restart sshd
 
 ##
 #--------------------------------------------------
-# Update Server
+# Update and upgrade the system
 #--------------------------------------------------
-echo -e "\n============== Update Server ======================="
+echo -e "====== Updating system packages =========="
 sudo apt update 
 sudo apt upgrade -y
 sudo apt autoremove -y
@@ -81,7 +81,7 @@ timedatectl
 #--------------------------------------------------
 # Install PostgreSQL Server
 #--------------------------------------------------
-echo -e "\n---- Install PostgreSQL Server ----"
+echo -e "\n---- Installing PostgreSQL ----"
 if [ $INSTALL_POSTGRESQL_SIXTEEN = "True" ]; then
     echo -e "\n---- Installing postgreSQL V16 due to the user it's choice ----"
     sudo apt -y install postgresql-16
@@ -90,29 +90,36 @@ else
     sudo apt -y install postgresql postgresql-server-dev-all
 fi
 
-sudo systemctl start postgresql && sudo systemctl enable postgresql
+echo "Starting PostgreSQL service..."
+sudo systemctl start postgresql 
+sudo systemctl enable postgresql
 
-echo -e "\n=============== Creating the ODOO PostgreSQL User ========================="
+echo -e "\n== Creating the ODOO PostgreSQL User ==="
 sudo su - postgres -c "createuser -s $OE_USER" 2> /dev/null || true
 
 #--------------------------------------------------
-# Install Python Dependencies
+# Install required packages
 #--------------------------------------------------
-echo -e "\n=================== Installing Python Dependencies ============================"
-sudo apt install -y git wget python3 python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
+echo "Installing required packages..."
+sudo apt install -y git wget python3-minimal python3-dev python3-pip python3-wheel libxml2-dev libxslt1-dev zlib1g-dev libsasl2-dev libldap2-dev build-essential \
 libssl-dev libffi-dev libmysqlclient-dev libjpeg-dev libpq-dev libjpeg8-dev liblcms2-dev libblas-dev libatlas-base-dev libzip-dev python3-setuptools node-less \
 python3-venv python3-cffi gdebi zlib1g-dev curl cython3 python3-openssl
 
 sudo pip3 install --upgrade pip --break-system-packages
 sudo pip3 install setuptools wheel --break-system-packages
 
-echo -e "\n================== Install Wkhtmltopdf ============================================="
+# Install xfonts dependencies for wkhtmltopdf
+echo "Installing xfonts for wkhtmltopdf..."
 sudo apt -y install xfonts-75dpi xfonts-encodings xfonts-utils xfonts-base fontconfig
 
-echo -e "\n=========== Installing nodeJS NPM and rtlcss for LTR support =================="
+# Install Node.js and npm
+echo "Installing Node.js and npm..."
 sudo apt -y install nodejs npm
+
 sudo ln -s /usr/bin/nodejs /usr/bin/node
 sudo npm install -g less less-plugin-clean-css
+
+# Install rtlcss for RTL support
 sudo npm install -g rtlcss
 
 #--------------------------------------------------
@@ -133,9 +140,10 @@ echo -e "\n---- Install wkhtmltopdf and place shortcuts on correct place for ODO
    else
   echo "Wkhtmltopdf isn't installed due to the choice of the user!"
   fi
-  
-echo -e "\n============== Create ODOO system user ========================"
-sudo adduser --system --quiet --shell=/bin/bash --home=$OE_HOME --gecos 'ODOO' --group $OE_USER
+
+# Create Odoo system user
+echo -e "\n=== Create Odoo system user ==="
+sudo adduser --system --quiet --shell=/bin/bash --home=$OE_HOME --gecos 'Odoo' --group $OE_USER
 
 #The user should also be added to the sudo'ers group.
 sudo adduser $OE_USER sudo
@@ -147,7 +155,7 @@ sudo chown -R $OE_USER:$OE_USER /var/log/$OE_USER
 #--------------------------------------------------
 # Install Odoo from source
 #--------------------------------------------------
-echo -e "\n========== Installing ODOO Server ==============="
+echo "Cloning Odoo 18 from GitHub..."
 sudo git clone --depth 1 --branch $OE_VERSION https://www.github.com/odoo/odoo $OE_HOME_EXT/
 sudo pip3 install -r /$OE_HOME_EXT/requirements.txt --break-system-packages
 if [ $IS_ENTERPRISE = "True" ]; then
@@ -176,14 +184,16 @@ if [ $IS_ENTERPRISE = "True" ]; then
     sudo npm install -g less-plugin-clean-css
 fi
 
-echo -e "\n========= Create custom module directory ============"
+# Create custom addons directory
+echo "Creating custom addons directory..."
 sudo mkdir $OE_HOME/custom
 sudo mkdir $OE_HOME/custom/addons
 
 echo -e "\n======= Setting permissions on home folder =========="
 sudo chown -R $OE_USER:$OE_USER $OE_HOME/
 
-echo -e "\n========== Create server config file ============="
+# Create Odoo configuration file
+echo "Creating Odoo configuration file..."
 sudo touch /etc/${OE_CONFIG}.conf
 
 echo -e "\n============= Creating server config file ==========="
@@ -223,10 +233,9 @@ sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
 sudo chmod 640 /etc/${OE_CONFIG}.conf
 
 #--------------------------------------------------
-# Adding Odoo as a deamon (Systemd)
+# Create systemd service file for Odoo
 #--------------------------------------------------
-
-echo -e "\n========== Create Odoo systemd file ==============="
+echo "Creating systemd service file..."
 cat <<EOF > /lib/systemd/system/$OE_USER.service
 
 [Unit]
@@ -248,17 +257,17 @@ EOF
 sudo chmod 755 /lib/systemd/system/$OE_USER.service
 sudo chown root: /lib/systemd/system/$OE_USER.service
 
-echo -e "\n======== Odoo startup File ============="
+# Reload systemd and start Odoo service
+echo "Reloading systemd daemon..."
 sudo systemctl daemon-reload
+
 sudo systemctl enable --now $OE_USER.service
 sudo systemctl start $OE_USER.service
-
-sudo systemctl restart $OE_USER.service
 
 #--------------------------------------------------
 # Install Nginx if needed
 #--------------------------------------------------
-echo -e "\n======== Installing nginx ============="
+echo -e "==== Installing nginx ===="
 if [ $INSTALL_NGINX = "True" ]; then
   echo -e "\n---- Installing and setting up Nginx ----"
   sudo apt install -y nginx
@@ -363,6 +372,7 @@ fi
 #--------------------------------------------------
 # UFW Firewall
 #--------------------------------------------------
+echo "Installation of UFW firewall ..."
 sudo apt install -y ufw 
 
 sudo ufw allow 'Nginx Full'
@@ -373,22 +383,22 @@ sudo ufw allow 6010/tcp
 #sudo ufw allow 5432//tcp
 sudo ufw allow 8069/tcp
 sudo ufw allow 8072/tcp
-sudo ufw enable 
+sudo ufw enable -y
 
-echo -e "\n================== Status of Odoo Service ============================="
+echo -e "=== checking status of odoo service ==="
 sudo systemctl status $OE_USER
 echo "\n========================================================================="
-echo "Done! The Odoo server is up and running. Specifications:"
+echo "Done! The odoo server is up and running. Specifications:"
 echo "Port: $OE_PORT"
 echo "User service: $OE_USER"
 echo "User PostgreSQL: $OE_USER"
 echo "Code location: $OE_USER"
 echo "Addons folder: $OE_USER/$OE_CONFIG/addons/"
 echo "Password superadmin (database): $OE_SUPERADMIN"
-echo "Start Odoo service: sudo systemctl start $OE_USER"
-echo "Stop Odoo service: sudo systemctl stop $OE_USER"
+echo "start odoo service: sudo systemctl start $OE_USER"
+echo "stop odoo service: sudo systemctl stop $OE_USER"
 echo "Restart Odoo service: sudo systemctl restart $OE_USER"
+echo "Odoo installation is complete. Access it at http://your-IP-address:8069"
 if [ $INSTALL_NGINX = "True" ]; then
   echo "Nginx configuration file: /etc/nginx/sites-available/$OE_USER"
 fi
-echo -e "\n========================================================================="
