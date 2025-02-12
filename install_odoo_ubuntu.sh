@@ -254,10 +254,10 @@ if [ $INSTALL_NGINX = "True" ]; then
   sudo apt install -y nginx
   sudo systemctl enable nginx
   
+echo "==== Configuring nginx ... ===="
 cat <<EOF > /etc/nginx/sites-available/$OE_USER
 
 # odoo server
-echo "==== Configuring nginx ... ===="
  upstream $OE_USER {
  server 127.0.0.1:$OE_PORT;
 }
