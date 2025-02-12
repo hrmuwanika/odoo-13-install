@@ -209,8 +209,7 @@ addons_path = ${OE_HOME_EXT}/addons, ${OE_HOME}/custom/addons, ${OE_HOME}/enterp
 http_port = ${OE_PORT}
 xmlrpc_port = ${OE_PORT}
 workers = 1
-proxy_mode = True
-list_db = False
+list_db = True
 EOF
 
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
@@ -221,7 +220,6 @@ sudo chmod 640 /etc/${OE_CONFIG}.conf
 #--------------------------------------------------
 echo "=== Creating systemd service file... ==="
 sudo cat <<EOF > /lib/systemd/system/$OE_USER.service
-
 [Unit]
 Description=Odoo Open Source ERP and CRM
 After=network.target
