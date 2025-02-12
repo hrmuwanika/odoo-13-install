@@ -210,6 +210,7 @@ http_port = ${OE_PORT}
 xmlrpc_port = ${OE_PORT}
 workers = 1
 proxy_mode = True
+list_db = False
 EOF
 
 sudo chown $OE_USER:$OE_USER /etc/${OE_CONFIG}.conf
